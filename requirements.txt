@@ -10,6 +10,7 @@ openai==1.58.1
 
 # Data Validation (comes with FastAPI but explicit here)
 pydantic==2.10.3
+pydantic-settings==2.0.3
 
 # Environment Variables
 python-dotenv==1.0.1
