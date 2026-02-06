@@ -6,6 +6,12 @@ Following the implementation plan exactly as outlined.
 
 ---
 
+## Architecture Plan
+
+The revised agentic implementation plan is documented in `IMPLEMENTATION_PLAN.md`.
+
+---
+
 ## Quick Start
 
 ```bash
@@ -44,7 +50,6 @@ code-review-agent/
 │   ├── api/
 │   │   ├── __init__.py
 │   │   ├── gemini_client.py      # Week 1 - Day 3-4
-│   │   └── retry_logic.py        # Week 1 - Day 4-5
 │   │
 │   ├── modules/
 │   │   ├── __init__.py
