@@ -22,17 +22,17 @@ Status legend:
 - [ ] ✅ `src/utils/validators.py`
 
 ### Tool modules
-- [ ] 🟡 `src/modules/detector.py` (tool target: `detect_issues`, file currently empty)
-- [ ] 🟡 `src/modules/explainer.py` (tool target: `explain_issue`, file currently empty)
-- [ ] 🟡 `src/modules/verifier.py` (tool target: `verify_analysis`, file currently empty)
+- [ ] ✅ `src/modules/detector.py` (tool target: `detect_issues`, file currently empty)
+- [ ] ✅ `src/modules/explainer.py` (tool target: `explain_issue`, file currently empty)
+- [ ] ✅ `src/modules/verifier.py` (tool target: `verify_analysis`, file currently empty)
 
 ### Post-agent formatting
-- [ ] 🟡 `src/modules/output_formatter.py` (exists, currently empty)
+- [ ] ✅ `src/prompts/schema.py`
 
 ## 3) Agent State Model (Mandatory)
 
 - [x] ✅ Canonical state object documented in `IMPLEMENTATION_PLAN.md`
-- [ ] 🟡 Runtime state model implementation file (e.g., `src/agent/state.py`)
+- [ ] ✅ Runtime state model implementation file (e.g., `src/agent/state.py`)
 - [ ] ❌ State update helpers/utilities
 
 ## 4) Agent Decision Loop (Mandatory)
