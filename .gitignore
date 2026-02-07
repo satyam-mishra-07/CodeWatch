@@ -29,6 +29,7 @@ wheels/
 
 # Development
 code_review_agent_plan.md
+IMPLEMENTATION_CHECKLIST.md
 
 # IDE
 .vscode/
