@@ -19,7 +19,7 @@ Status legend:
 - [x] ✅ `src/modules/input_handler.py`
 - [x] ✅ `src/utils/language_detector.py`
 - [x] ✅ `src/utils/logger.py`
-- [ ] 🟡 `src/utils/validators.py` (exists, still empty)
+- [ ] ✅ `src/utils/validators.py`
 
 ### Tool modules
 - [ ] 🟡 `src/modules/detector.py` (tool target: `detect_issues`, file currently empty)
@@ -32,7 +32,7 @@ Status legend:
 ## 3) Agent State Model (Mandatory)
 
 - [x] ✅ Canonical state object documented in `IMPLEMENTATION_PLAN.md`
-- [ ] ❌ Runtime state model implementation file (e.g., `src/agent/state.py`)
+- [ ] 🟡 Runtime state model implementation file (e.g., `src/agent/state.py`)
 - [ ] ❌ State update helpers/utilities
 
 ## 4) Agent Decision Loop (Mandatory)
@@ -43,7 +43,7 @@ Status legend:
   - `explain_issue(issue_id)`
   - `verify_analysis`
   - `finish`
-- [ ] ❌ Agent controller runtime implementation (e.g., `src/agent/controller.py`)
+- [ ] 🟡 Agent controller runtime implementation (e.g., `src/agent/controller.py`)
 - [ ] ❌ Action validation / illegal action guardrails in runtime code
 - [ ] ❌ Step limit safety checks in runtime code
 
@@ -52,7 +52,7 @@ Status legend:
 - [ ] 🟡 `src/prompts/detection_prompt.py` (exists, empty)
 - [ ] 🟡 `src/prompts/explaination_prompt.py` (exists, empty)
 - [ ] 🟡 `src/prompts/verification_prompt.py` (exists, empty)
-- [ ] ❌ Agent Decision Prompt template file (e.g., `src/prompts/agent_decision_prompt.py`)
+- [ ] 🟡 Agent Decision Prompt template file (e.g., `src/prompts/agent_decision_prompt.py`)
 
 ## 6) API Integration Strategy
 

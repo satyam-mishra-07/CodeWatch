@@ -78,6 +78,7 @@ Canonical state object:
 State model rules:
 - State persists across tool calls
 - Tools may read and write state (through controlled updates)
+- Tools may not delete or overwrite prior state entries, only append or annotate results.
 - LLM reasoning is grounded in current state snapshot
 - `step_count` supports loop limits and safety checks
 - `done` is set only by valid completion logic
