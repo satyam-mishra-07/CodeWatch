@@ -1,6 +1,8 @@
 import json
 from typing import List
 
+from google.genai import types
+
 from src.agent.state import AgentState
 from src.agent.tools import TOOLS
 from src.agent.runtime_tools import ToolExecutor
@@ -17,19 +19,22 @@ class AgentController:
         self.client = GeminiClient()
         self.executor = ToolExecutor()
 
-        # Conversation history (OpenAI-style)
-        self.messages: List[dict] = [
-            {
-                "role": "user",
-                "content": f"""
+        self.contents: List[types.Content] = [
+            types.Content(
+                role="user",
+                parts=[
+                    types.Part.from_text(
+                        text=f"""
 You are a code review agent.
 
 Goal:
 {state.goal}
 
-Analyze the provided code and decide which tools to use.
+Analyze the provided code and decide which tool to call next.
 """
-            }
+                    )
+                ],
+            )
         ]
 
     def run(self) -> AgentState:
@@ -39,72 +44,64 @@ Analyze the provided code and decide which tools to use.
             self.state.increment_step()
             self.logger.info("Agent step %d", step + 1)
 
-            response = self.client.create_tool_decision(
-                messages=self.messages,
+            assistant_content = self.client.decide_next_action(
+                contents=self.contents,
                 tools=TOOLS,
             )
 
-            message = response.choices[0].message
-            assistant_message = {"role": "assistant"}
-            if getattr(message, "content", None) is not None:
-                assistant_message["content"] = message.content
-            if message.tool_calls:
-                assistant_message["tool_calls"] = [
-                    {
-                        "id": tc.id,
-                        "type": "function",
-                        "function": {
-                            "name": tc.function.name,
-                            "arguments": tc.function.arguments,
-                        },
-                    }
-                    for tc in message.tool_calls
-                ]
-            self.messages.append(assistant_message)
+            self.contents.append(assistant_content)
 
-            # If the model decided to call tools
-            if message.tool_calls:
-                for call in message.tool_calls:
-                    tool_name = call.function.name
-                    arguments = json.loads(call.function.arguments or "{}")
+            # Execute ALL function calls (Gemini can emit multiple parts)
+            for part in assistant_content.parts:
+                if not part.function_call:
+                    continue
 
-                    self.logger.info(
-                        "LLM requested tool: %s | args=%s",
-                        tool_name,
-                        arguments,
+                tool_name = part.function_call.name
+                arguments = dict(part.function_call.args)
+
+                self.logger.info(
+                    "LLM requested tool: %s | args=%s",
+                    tool_name,
+                    arguments,
+                )
+
+                if tool_name not in self.executor.allowed_actions:
+                    raise RuntimeError(f"Illegal tool call: {tool_name}")
+
+                result = self.executor.execute(
+                    tool_name=tool_name,
+                    state=self.state,
+                    arguments=arguments,
+                )
+
+                self._update_state(tool_name, result)
+
+                # Feed tool result back to the model
+                self.contents.append(
+                    types.Content(
+                        role="tool",
+                        parts=[
+                            types.Part.from_function_response(
+                                name=tool_name,
+                                response=result,
+                            )
+                        ],
                     )
+                )
 
-                    if tool_name not in self.executor.allowed_actions:
-                        raise RuntimeError(f"Illegal tool call: {tool_name}")
+                break  # one tool per step (agent discipline)
 
-                    # Execute tool in Python
-                    result = self.executor.execute(
-                        tool_name=tool_name,
-                        state=self.state,
-                        arguments=arguments,
-                    )
-
-                    # Update state explicitly
-                    self._update_state(tool_name, result)
-
-                    # Feed tool output back to the LLM
-                    self.messages.append(
-                        {
-                            "role": "tool",
-                            "tool_call_id": call.id,
-                            "content": json.dumps(result),
-                        }
-                    )
-
-                continue
-
-            # No tool calls → model is done
-            self.logger.info("No tool calls returned; finishing")
-            self.state.done = True
-            break
+            else:
+                # No function calls → agent is done
+                self.logger.info("No tool call returned; finishing")
+                self.state.done = True
+                break
 
         if not self.state.done:
-            self.logger.warning("Agent reached max steps (%d) without explicit finish", self.MAX_STEPS)
+            self.logger.warning(
+                "Agent reached max steps (%d) without explicit finish",
+                self.MAX_STEPS,
+            )
             self.state.done = True
 
         self.logger.info("Agent finished execution")
