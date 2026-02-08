@@ -1,22 +1,5 @@
-# Core Dependencies - Essential Only
-# Install: pip install -r requirements.txt
-
-# API Framework
-fastapi==0.115.5
-uvicorn[standard]==0.34.0
-
-# Gemini API (via OpenAI SDK)
 openai==1.58.1
-
-# Data Validation (comes with FastAPI but explicit here)
 pydantic==2.10.3
 pydantic-settings==2.0.3
-
-# Environment Variables
 python-dotenv==1.0.1
-
-# Testing (essential for v1)
 pytest==8.3.4
-
-# Nice CLI output (optional but helpful)
-rich==13.9.4
