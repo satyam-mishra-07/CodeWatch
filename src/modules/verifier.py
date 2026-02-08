@@ -1,8 +1,8 @@
-import json
 from typing import Dict, List
 from src.api.gemini_client import GeminiClient
 from src.utils.logger import get_logger
 from src.prompts.verification_prompt import build_verification_prompt
+from config.settings import settings
 from src.prompts.schemas import VerificationOutput
 
 
@@ -31,8 +31,8 @@ class AnalysisVerifier:
         response = self.client.generate_structured(
             prompt=prompt,
             schema=VerificationOutput,
-            temperature=0.2,
-            max_tokens=1024,
+            temperature=settings.verification_temperature,
+            max_tokens=settings.verification_max_tokens,
         )
 
         if not response:

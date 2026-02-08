@@ -1,8 +1,8 @@
-import json
 from typing import Dict
 from src.api.gemini_client import GeminiClient
 from src.utils.logger import get_logger
 from src.prompts.detection_prompt import build_detection_prompt
+from config.settings import settings
 from src.prompts.schemas import DetectionOutput
 
 
@@ -27,8 +27,8 @@ class IssueDetector:
         response = self.client.generate_structured(
             prompt=prompt,
             schema=DetectionOutput,
-            temperature=0.3,
-            max_tokens=2048,
+            temperature=settings.detection_temperature,
+            max_tokens=settings.detection_max_tokens,
         )
 
         if not response:

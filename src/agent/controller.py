@@ -5,7 +5,6 @@ from src.agent.state import AgentState
 from src.agent.tools import TOOLS
 from src.agent.runtime_tools import ToolExecutor
 from src.utils.logger import get_logger
-from src.utils.validators import Validator
 from src.api.gemini_client import GeminiClient
 
 
@@ -17,7 +16,6 @@ class AgentController:
         self.logger = get_logger(self.__class__.__name__)
         self.client = GeminiClient()
         self.executor = ToolExecutor()
-        self.validator = Validator()
 
         # Conversation history (OpenAI-style)
         self.messages: List[dict] = [
@@ -38,19 +36,31 @@ Analyze the provided code and decide which tools to use.
         self.logger.info("Agent started")
 
         for step in range(self.MAX_STEPS):
+            self.state.increment_step()
             self.logger.info("Agent step %d", step + 1)
 
-            response = self.client.client.chat.completions.create(
-                model=self.client.model,
+            response = self.client.create_tool_decision(
                 messages=self.messages,
                 tools=TOOLS,
-                tool_choice="auto",
-                temperature=0.1,
-                max_tokens=512,
             )
 
             message = response.choices[0].message
-            self.messages.append(message)
+            assistant_message = {"role": "assistant"}
+            if getattr(message, "content", None) is not None:
+                assistant_message["content"] = message.content
+            if message.tool_calls:
+                assistant_message["tool_calls"] = [
+                    {
+                        "id": tc.id,
+                        "type": "function",
+                        "function": {
+                            "name": tc.function.name,
+                            "arguments": tc.function.arguments,
+                        },
+                    }
+                    for tc in message.tool_calls
+                ]
+            self.messages.append(assistant_message)
 
             # If the model decided to call tools
             if message.tool_calls:
@@ -92,6 +102,10 @@ Analyze the provided code and decide which tools to use.
             self.logger.info("No tool calls returned; finishing")
             self.state.done = True
             break
+
+        if not self.state.done:
+            self.logger.warning("Agent reached max steps (%d) without explicit finish", self.MAX_STEPS)
+            self.state.done = True
 
         self.logger.info("Agent finished execution")
         return self.state

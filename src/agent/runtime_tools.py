@@ -1,4 +1,3 @@
-import json
 from typing import Dict, Any
 
 from src.modules.detector import IssueDetector
@@ -55,7 +54,7 @@ class ToolExecutor:
             )
 
         if tool_name == "verify_analysis":
-            return self.verifier.verify(
+            return self.verifier.verify_analysis(
                 code=state.code,
                 explanations=state.explanations,
             )
