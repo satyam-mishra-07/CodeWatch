@@ -12,14 +12,14 @@ class IssueExplainer:
         self.client = GeminiClient()
         self.logger = get_logger(self.__class__.__name__)
 
-    def explain_issue(self, code: str, language: str, issue: Dict) -> Dict:
-        issue_id = issue.get("id")
-        self.logger.info("Explaining issue: %s", issue_id)
+    def explain_issues(self, code: str, language: str, issues: list[Dict]) -> Dict:
+        issue_id = issues[0].get("id") if issues else None
+        self.logger.info("Explaining %d issues in batch", len(issues))
 
         prompt = build_explaination_prompt(
             code=code,
             language=language,
-            issue=issue,
+            issues=issues,
         )
 
         contents = [
@@ -36,5 +36,8 @@ class IssueExplainer:
             max_tokens=settings.explanation_max_tokens,
         )
 
-        self.logger.info("Explanation generated successfully for %s", issue_id)
+        self.logger.info(
+            "Batch explanation generated successfully (%d issues)",
+            len(response.explanations),
+        )
         return response.model_dump()

@@ -16,23 +16,16 @@ detect_issues_tool = types.Tool(
     ]
 )
 
-explain_issue_tool = types.Tool(
+explain_issues_tool = types.Tool(
     function_declarations=[
         types.FunctionDeclaration(
-            name="explain_issue",
+            name="explain_issues",
             description=(
-                "Generate a detailed explanation for a specific detected issue, "
-                "including why it is an issue, when it matters, and when it may be acceptable."
+                "Generate detailed explanations for ALL detected issues in the code."
             ),
             parameters={
                 "type": "object",
-                "properties": {
-                    "issue_id": {
-                        "type": "string",
-                        "description": "The unique identifier of the issue to explain.",
-                    }
-                },
-                "required": ["issue_id"],
+                "properties": {},
             },
         )
     ]
@@ -56,6 +49,6 @@ verify_analysis_tool = types.Tool(
 
 TOOLS = [
     detect_issues_tool,
-    explain_issue_tool,
+    explain_issues_tool,
     verify_analysis_tool,
 ]

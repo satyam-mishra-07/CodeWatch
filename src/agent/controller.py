@@ -44,6 +44,71 @@ Analyze the provided code and decide which tool to call next.
             self.state.increment_step()
             self.logger.info("Agent step %d", step + 1)
 
+            # ===== Guardrail 1: must detect issues at least once =====
+            if self.state.step_count == 1 and not self.state.detection_attempted and not self.state.issues:
+                self.logger.info("Forcing initial detect_issues step")
+
+                result = self.executor.execute(
+                    tool_name="detect_issues",
+                    state=self.state,
+                    arguments={},
+                )
+                self._update_state("detect_issues", result)
+
+                # 👇 Feed tool output back to the LLM
+                self.contents.append(
+                    types.Content(
+                        role="tool",
+                        parts=[
+                            types.Part.from_function_response(
+                                name="detect_issues",
+                                response=result,
+                            )
+                        ],
+                    )
+                )
+
+                continue
+
+            issue_ids = {i["id"] for i in self.state.issues}
+            explained_ids = {e.get("issue_id") for e in self.state.explanations}
+            missing_ids = issue_ids - explained_ids
+
+            if self.state.explanation_attempted and missing_ids and not self.state.explanation_retry_done:
+                self.logger.info("Retrying explanations for missing issues")
+                self.logger.warning(
+                    "Incomplete explanations: %d/%d explained",
+                    len(explained_ids),
+                    len(issue_ids),
+                )
+                missing_issues = [
+                    i for i in self.state.issues if i["id"] in missing_ids
+                ]
+
+                result = self.executor.execute(
+                    tool_name="explain_issues",
+                    state=self.state,
+                    arguments={"issues": missing_issues},
+                )
+
+                self.state.explanation_retry_done = True
+                self._update_state("explain_issues", result)
+                continue
+
+            if missing_ids and self.state.explanation_retry_done:
+                self.logger.warning(
+                    "Proceeding with partial explanations (%d/%d)",
+                    len(explained_ids),
+                    len(issue_ids),
+                )
+                     
+            # ===== Guardrail 2: no issues means we're done =====
+            if self.state.step_count > 1 and not self.state.issues:
+                self.logger.info("No issues detected; finishing early")
+                self.state.done = True
+                break
+
+            # ===== LLM decides next action =====
             assistant_content = self.client.decide_next_action(
                 contents=self.contents,
                 tools=TOOLS,
@@ -51,7 +116,7 @@ Analyze the provided code and decide which tool to call next.
 
             self.contents.append(assistant_content)
 
-            # Execute ALL function calls (Gemini can emit multiple parts)
+            # Execute ALL function calls
             for part in assistant_content.parts:
                 if not part.function_call:
                     continue
@@ -76,7 +141,7 @@ Analyze the provided code and decide which tool to call next.
 
                 self._update_state(tool_name, result)
 
-                # Feed tool result back to the model
+                # Feed tool result back
                 self.contents.append(
                     types.Content(
                         role="tool",
@@ -89,10 +154,10 @@ Analyze the provided code and decide which tool to call next.
                     )
                 )
 
-                break  # one tool per step (agent discipline)
+                break  # one tool per step
 
             else:
-                # No function calls → agent is done
+                # No tool calls → agent is done
                 self.logger.info("No tool call returned; finishing")
                 self.state.done = True
                 break
@@ -107,19 +172,22 @@ Analyze the provided code and decide which tool to call next.
         self.logger.info("Agent finished execution")
         return self.state
 
+
     def _update_state(self, tool_name: str, result: dict) -> None:
         if tool_name == "detect_issues":
             self.state.issues.extend(result.get("issues", []))
+            self.state.detection_attempted = True
             self.logger.info(
                 "State updated: %d issues total",
                 len(self.state.issues),
             )
 
-        elif tool_name == "explain_issue":
-            self.state.explanations.append(result)
+        elif tool_name == "explain_issues":
+            self.state.explanations.extend(result["explanations"])
+            self.state.explanation_attempted = True
             self.logger.info(
-                "State updated: explanation added for %s",
-                result.get("issue_id"),
+                "State updated: explanation added for %d issues",
+                len(result.get("explanations", [])),
             )
 
         elif tool_name == "verify_analysis":

@@ -20,7 +20,7 @@ class ToolExecutor:
 
         self.allowed_actions = {
             "detect_issues",
-            "explain_issue",
+            "explain_issues",
             "verify_analysis",
         }
 
@@ -38,20 +38,12 @@ class ToolExecutor:
                 language=state.language,
             )
 
-        if tool_name == "explain_issue":
-            issue_id = arguments.get("issue_id")
-            issue = next(
-                (i for i in state.issues if i["id"] == issue_id),
-                None,
-            )
-            if not issue:
-                raise ValueError(f"Issue not found: {issue_id}")
-
-            return self.explainer.explain_issue(
-                code=state.code,
-                language=state.language,
-                issue=issue,
-            )
+        if tool_name == "explain_issues":
+            return self.explainer.explain_issues(
+            code=state.code,
+            language=state.language,
+            issues=state.issues,
+        )
 
         if tool_name == "verify_analysis":
             return self.verifier.verify_analysis(

@@ -1,4 +1,4 @@
-def build_explaination_prompt(code: str, language: str, issue: dict) -> str:
+def build_explaination_prompt(code: str, language: str, issues: list[dict]) -> str:
     return f"""You are explaining a specific code issue. Be precise and conditional.
 
 CODE:
@@ -6,18 +6,33 @@ CODE:
 {code}
 ```
 
-ISSUE:
-ID: {issue['id']}
-Line: {issue['line_number']}
-Type: {issue['issue_type']}
-Description: {issue['brief_description']}
+DETECTED ISSUES:
+{issues}
+
 
 YOUR TASK:
-Explain this issue in three parts:
+Generate explanations for the detected issues.
 
-1. WHY this is an issue (root cause)
-2. WHEN it matters (conditions where it's problematic)
-3. WHEN it may NOT matter (acceptable contexts)
+RULES:
+- Return EXACTLY ONE explanation per issue.
+- Each explanation MUST correspond to one issue from DETECTED ISSUES.
+- Each explanation object MUST include the SAME issue_id as the issue it explains.
+
+Each explanation object must have:
+    1. issue_id (string)
+    2. why (root cause)
+    3. when_matters (conditions where it's problematic)
+    4. when_acceptable (when it may not matter)
+    5. severity ("low" | "medium" | "high")
+    6. confidence ("low" | "medium" | "high")
+
+
+OUTPUT RULES:
+- Return one explanation object per issue
+- Each explanation MUST include issue_id matching the issue
+- All issues MUST be covered exactly once
+- Output must conform to the provided JSON schema
+- Return ONLY valid JSON
 
 CONSTRAINTS:
 - Be specific to THIS code, not generic advice

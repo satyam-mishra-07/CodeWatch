@@ -28,7 +28,8 @@ class DetectionOutput(BaseModel):
 # Explanation
 # ============================================================
 
-class IssueExplanation(BaseModel):
+class ExplanationItem(BaseModel):
+    issue_id: str
     why: str
     when_matters: str
     when_acceptable: str
@@ -37,8 +38,7 @@ class IssueExplanation(BaseModel):
 
 
 class ExplanationOutput(BaseModel):
-    issue_id: str
-    explanation: IssueExplanation
+    explanations: list[ExplanationItem]
 
 
 # ============================================================
