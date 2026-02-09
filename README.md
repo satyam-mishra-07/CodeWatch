@@ -188,5 +188,3 @@ Below is representative output structure (values abbreviated):
 ```
 
 ---
-
-If you want, I can also add a quick **"Troubleshooting"** section (common API key/config errors) and a **"Contributing"** section next.
