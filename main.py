@@ -40,9 +40,12 @@ def _state_to_dict(state: AgentState) -> dict[str, Any]:
     return {
         "goal": state.goal,
         "language": state.language,
+        "detection_attempted": state.detection_attempted,
         "issues": state.issues,
         "explanations": state.explanations,
         "verification": state.verification,
+        "explanation_retry_done": state.explanation_retry_done,
+        "explanation_attempted": state.explanation_attempted,
         "step_count": state.step_count,
         "done": state.done,
     }
